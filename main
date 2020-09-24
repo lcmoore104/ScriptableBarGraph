@@ -36,7 +36,7 @@ async function createWidget(items) {
   let yfit = xy - ytop - ybot
   var i
   for (i = 0; i < samplesize; i++){
-    let day = items[items.length - 1 - samplesize + i]
+    let day = items[items.length - samplesize + i]
     let hits = day["hits"]
     dayHits.push(hits)
   }

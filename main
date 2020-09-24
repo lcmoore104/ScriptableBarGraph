@@ -1,0 +1,94 @@
+// modified from News in Widget
+// 
+let items = await loadItems()
+let widget = await createWidget(items)
+// Check if the script is running in
+// a widget. If not, show a preview of
+// the widget to easier debug it.
+if (!config.runsInWidget) {
+  await widget.presentSmall()
+}
+// Tell the system to show the widget.
+Script.setWidget(widget)
+Script.complete()
+
+async function createWidget(items) {
+  
+  let todayHits = items[items.length-1]["hits"].toString()
+  
+  let w = new ListWidget()
+  
+  w.backgroundColor = new Color("#52525a")
+  
+  // Show hits from today
+  w.addSpacer()
+  let titleTxt = w.addText(todayHits)
+  titleTxt.font = Font.boldSystemFont(14)
+  titleTxt.textColor = new Color("#52525a")
+  titleTxt.rightAlignText()
+
+  // make list of last few days of hits
+  let dayHits = []
+  let samplesize = 13 // how many bars to show
+  let xy = 200 // xy dimensions of generated image
+  let ytop = 0.1 * xy // margin on top
+  let ybot = 0.25 * xy // margin on bottom
+  let yfit = xy - ytop - ybot
+  var i
+  for (i = 0; i < samplesize; i++){
+    let day = items[items.length - 1 - samplesize + i]
+    let hits = day["hits"]
+    dayHits.push(hits)
+  }
+  
+  // find max number
+  var max = 0
+  for (i = 0; i < dayHits.length; i++){
+    if (dayHits[i] > max) {
+      max = dayHits[i]
+    }
+  }
+  
+  // set up context
+  let dc = new DrawContext()
+  dc.respectScreenScale = true
+  
+  // background
+  let full = new Rect(0, 0, xy, xy)
+  let charcoal = new Color("#52525a")
+  dc.setFillColor(charcoal)
+  dc.fillRect(full)
+  
+  // render bars
+  let inc = xy / (samplesize + 2) // increment in x
+  dc.setFillColor(Color.white())
+  for (i = 0; i < dayHits.length; i++){
+    let y = ytop + yfit * (1 - (dayHits[i] / max))
+    let x = (i + 1) * inc
+    let width = inc - 1
+    let height = yfit * dayHits[i] / max
+    let bar = new Rect(x, y, width, height)
+    dc.fillRect(bar)
+  }
+  
+  let base = new Rect(0, ytop + yfit, xy, ybot)
+  dc.setFillColor(Color.white())
+  dc.fillRect(base)
+  
+  let image = dc.getImage()
+  
+  w.backgroundImage = image
+  
+  return w
+}
+  
+async function loadItems() {
+//   let url = "http://url-location.net/json"
+//   let req = new Request(url)
+//   let json = await req.loadJSON()
+//   use this method to load your json
+//   example json here:
+  let jsonstr = '[{"day":0, "hits":15},{"day":1, "hits":8},{"day":2, "hits":18},{"day":3, "hits":22},{"day":4, "hits":16},{"day":5, "hits":12},{"day":6, "hits":14},{"day":7, "hits":21},{"day":8, "hits":15},{"day":9, "hits":16},{"day":10, "hits":15},{"day":11, "hits":9},{"day":12, "hits":18},{"day":13, "hits":15}]'
+  let json = JSON.parse(jsonstr)
+  return json
+}
